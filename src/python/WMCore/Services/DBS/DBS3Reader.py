@@ -638,9 +638,15 @@ class DBS3Reader(object):
             try:
                 blocksInfo = self.phedex.getReplicaPhEDExNodesForBlocks(block=fileBlockNames, complete='y')
             except Exception as ex:
-                msg = "Error while getting block location from PhEDEx for block_name=%s)\n" % fileBlockNames
+                msg = "Error while getting block location from PhEDEx for block_name=%s. Trying with RUCIO)\n" % fileBlockNames
                 msg += "%s\n" % str(ex)
-                raise Exception(msg)
+                self.logger.warn(msg) 
+                try:
+                    blocksInfo = self.rucio.getReplicaInfoForBlocks(fileBlockNames)
+                except Exception as ex:
+                    msg = "Error while getting block location from RUCIO for block_name=%s.)\n" % fileBlockNames
+                    msg += "%s\n" % str(ex)
+                    raise Exception(msg)
 
         for block in fileBlockNames:
             valid_nodes = set(blocksInfo.get(block, [])) - node_filter
